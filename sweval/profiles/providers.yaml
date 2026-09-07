@@ -1,0 +1,54 @@
+# Provider 端点模板（litellm model 前缀 + 推理档位映射 + 价格 USD/1M tokens）
+# base_url 匹配规则按顺序; 命中即用该 provider 模板
+version: 1
+providers:
+  deepseek:
+    match_base_url: ["api.deepseek.com"]
+    match_model_prefix: ["deepseek/"]
+    litellm_model: "deepseek/{model}"
+    default_base_url: "https://api.deepseek.com/v1"
+    auth_env: "DEEPSEEK_API_KEY"
+    auth_style: "bearer"
+    balance_endpoint: "https://api.deepseek.com/user/balance"
+    thinking:            # reasoning tier -> request param (OpenAI-compat)
+      high: {"thinking": {"type": "enabled", "budget_tokens": 32768}}
+      medium: {"thinking": {"type": "enabled", "budget_tokens": 8192}}
+      off: {"thinking": {"type": "disabled"}}
+    price_in_cachemiss: 0.14
+    price_out: 0.28
+    balance_json_path: "balance_info.total_balance"
+  anthropic:
+    match_base_url: ["api.anthropic.com"]
+    match_model_prefix: ["claude-", "anthropic/"]
+    litellm_model: "anthropic/{model}"
+    default_base_url: null
+    auth_env: "ANTHROPIC_API_KEY"
+    auth_style: "x-api-key"
+    thinking:
+      high: {"thinking": {"type": "enabled", "budget_tokens": 32768}}
+      off: {}
+  kerminal:
+    match_base_url: ["api.kerminal.cn", "api-dev.kerminal.cn"]
+    litellm_model: "anthropic/{model}"
+    default_base_url: "https://api.kerminal.cn"
+    api_base: "https://api.kerminal.cn"   # litellm anthropic provider appends /v1/messages
+    auth_env: "ANTHROPIC_API_KEY"
+    auth_style: "x-api-key"
+    cost_tracking: "ignore_errors"   # 自有模型无 litellm 价格表
+    thinking:
+      high: {"type": "enabled", "budget_tokens": 32768}
+      off: {}
+  openai:
+    match_base_url: ["api.openai.com"]
+    litellm_model: "openai/{model}"
+    default_base_url: null
+    auth_env: "OPENAI_API_KEY"
+    auth_style: "bearer"
+    thinking: {}
+  generic-openai:
+    match_base_url: []       # 兜底: 任何 /v1 地址
+    litellm_model: "openai/{model}"   # 依赖 custom_openai_base_url
+    default_base_url: null
+    auth_env: null
+    auth_style: "bearer"
+    thinking: {}

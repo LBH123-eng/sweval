@@ -1,0 +1,78 @@
+# 官方 Verified 榜单锚点（mini-SWE-agent v2 视图, 2026-02 批次）
+# 来源: swebench.com (2026-09-06 抓取); 版本 2.0.0; temperature 未设
+# 用途: 同口径对比表; 引用需注明 n/档位差异
+version: 1
+fetched: "2026-09-06"
+entries:
+  - model: "Claude 4.5 Opus"
+    note: "high reasoning"
+    resolved: 76.8
+    avg_cost: 0.75
+    date: "2026-02-17"
+    agent_version: "2.0.0"
+  - model: "Gemini 3 Flash"
+    note: "high reasoning"
+    resolved: 75.8
+    avg_cost: 0.36
+    date: "2026-02-17"
+    agent_version: "2.0.0"
+  - model: "MiniMax M2.5"
+    note: "high reasoning"
+    resolved: 75.8
+    avg_cost: 0.07
+    date: "2026-02-17"
+    agent_version: "2.0.0"
+  - model: "Claude Opus 4.6"
+    note: ""
+    resolved: 75.6
+    avg_cost: 0.55
+    date: "2026-02-17"
+    agent_version: "2.0.0"
+  - model: "GPT-5.2"
+    note: "high reasoning"
+    resolved: 72.8
+    avg_cost: 0.45
+    date: "2026-02-17"
+    agent_version: "2.0.0"
+  - model: "GLM-5"
+    note: "high reasoning"
+    resolved: 72.8
+    avg_cost: 0.53
+    date: "2026-02-17"
+    agent_version: "2.0.0"
+  - model: "Claude 4.5 Sonnet"
+    note: "high reasoning"
+    resolved: 71.4
+    avg_cost: 0.66
+    date: "2026-02-17"
+    agent_version: "2.0.0"
+  - model: "Kimi K2.5"
+    note: "high reasoning"
+    resolved: 70.8
+    avg_cost: 0.15
+    date: "2026-02-17"
+    agent_version: "2.0.0"
+  - model: "DeepSeek V3.2"
+    note: "high reasoning"
+    resolved: 70.0
+    avg_cost: 0.45
+    date: "2026-02-17"
+    agent_version: "2.0.0"
+  - model: "Gemini 3 Pro"
+    note: ""
+    resolved: 69.6
+    avg_cost: 0.96
+    date: "2026-02-26"
+    agent_version: "2.0.0"
+  - model: "Claude 4.5 Haiku"
+    note: "high reasoning"
+    resolved: 66.6
+    avg_cost: 0.33
+    date: "2026-02-17"
+    agent_version: "2.0.0"
+  - model: "GPT-5 Mini"
+    note: "high reasoning"
+    resolved: 56.2
+    avg_cost: 0.05
+    date: "2026-02-17"
+    agent_version: "2.0.0"

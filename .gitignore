@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# run artifacts (never commit keys or trajectories)
+runs/
+*.traj.json
+preds*.json
+.env.api_key
+PAUSED.txt
+mini_run.log
+harness_eval.log
+eval_reports/
+
+# local notes
+PIPELINE_IO.md

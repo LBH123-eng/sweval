@@ -1,0 +1,41 @@
+# 已知缺陷实例（gold 验证亦失败，与本模型无关）
+# 来源: benchmark_log.md Q2 分析（2026-09-07），复核条件见各项
+version: 1
+updated: "2026-09-07"
+instances:
+  django__django-10097:
+    reason: image_missing_auth_templates
+    evidence: "gold run 813x TemplateDoesNotExist; gold patch identical to model fix"
+    revive_if: "image rebuilt with registration templates present"
+  psf__requests-2317:
+    reason: external_network_dependency
+    evidence: "test_auth_is_stripped_on_redirect_off_host FAILED on clean image (httpbin.org reset); vendored urllib3 Py3.9 TypeError"
+    revive_if: "local httpbin + HTTPBIN_URL set"
+  sphinx-doc__sphinx-7985:
+    reason: external_network_dependency
+    evidence: "linkcheck tests hit google.com/sphinx-doc.org, Errno 110 timeouts; clean image reproduce FAILED"
+    revive_if: "outbound proxy for eval containers"
+  sphinx-doc__sphinx-8269:
+    reason: external_network_dependency
+    evidence: "F2P passed; 3 linkcheck P2P hit google.com timeouts (25x Errno 110)"
+    revive_if: "outbound proxy for eval containers"
+  sphinx-doc__sphinx-8475:
+    reason: external_network_dependency
+    evidence: "F2P passed; 3 linkcheck P2P failed on localhost:7777 refused + google timeouts"
+    revive_if: "outbound proxy for eval containers"
+  sphinx-doc__sphinx-10435:
+    reason: external_network_dependency
+    evidence: "test_latex_images expects google.com/NOT_EXIST.PNG [404], got Errno 110 timeout after 142s retries"
+    revive_if: "outbound proxy for eval containers"
+  pylint-dev__pylint-6528:
+    reason: cgroup_cpu_misdetect_plus_tomlkit
+    evidence: "3 needs_two_cores tests SKIP via cpu.shares=1024->_cpu_count()=1; test_jobs_score TOMLKitError (tomlkit 0.13.2)"
+    revive_if: "cpu.shares fix or tomlkit pin"
+  pylint-dev__pylint-7277:
+    reason: cgroup_cpu_misdetect_plus_tomlkit
+    evidence: "test_jobs_score TOMLKitError on tomlkit 0.13.2; same needs_two_cores skip risk"
+    revive_if: "cpu.shares fix or tomlkit pin"
+  scikit-learn__scikit-learn-14710:
+    reason: eval_timeout
+    evidence: "harness Test timed out after 1800 seconds at 1% of test_gradient_boosting.py"
+    revive_if: "increased harness timeout (--timeout) or lower concurrency"
