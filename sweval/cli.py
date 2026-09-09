@@ -129,7 +129,24 @@ def run(
         print(f"[sweval] generation PAUSED ({state['breaker_tripped']}). "
               f"Fix the issue and re-run the same command to resume.")
         raise typer.Exit(3)
-    _do_eval(run_dir, model, gen_kwargs, n, workers, exclude, verbose)
+    # eval runs DETACHED: survives this CLI process being killed (Q4/Q5 fix)
+    _spawn_or_run_eval(run_dir, model, gen_kwargs, n, workers, exclude, verbose,
+                       detached=True)
+
+
+def _spawn_or_run_eval(run_dir: Path, model: str, gen_kwargs: dict, n: int,
+                       workers: int, exclude: list[str], verbose: bool,
+                       detached: bool = True):
+    """Prune failed entries, then evaluate (detached by default)."""
+    prune_failed_preds(run_dir)
+    done = scan_done(run_dir)
+    print(f"[sweval] evaluating {len(done)} instances with official harness "
+          f"({SWEBENCH_VERSION})")
+    if not detached:
+        _do_eval(run_dir, model, gen_kwargs, n, workers, exclude, verbose)
+        return
+    from .evaluator import spawn_eval_detached
+    spawn_eval_detached(run_dir, workers)
 
 
 def _do_eval(run_dir: Path, model: str, gen_kwargs: dict, n: int, workers: int,
@@ -172,8 +189,9 @@ def resume(
     if state["state"] == "PAUSED":
         print(f"[sweval] still blocked: {state['breaker_tripped']}")
         raise typer.Exit(3)
-    _do_eval(run_dir, manifest["model"], gen_kwargs, manifest.get("n", 1),
-             workers, manifest["excluded"], verbose)
+    _spawn_or_run_eval(run_dir, manifest["model"], gen_kwargs,
+                       manifest.get("n", 1), workers, manifest["excluded"],
+                       verbose, detached=True)
 
 
 @app.command()
@@ -199,6 +217,37 @@ def status(
               f"tokens in/out: {tok.get('tokens_in', 0):,}/{tok.get('tokens_out', 0):,}")
     ev_report = list((run_dir / "eval_reports").glob(f"*{run_dir.name}.json")) if (run_dir / "eval_reports").exists() else []
     print(f"evaluation: {'DONE -> ' + str(ev_report[0]) if ev_report else 'pending'}")
+
+
+@app.command()
+def retry_timeouts(
+    run_dir: Path = typer.Argument(..., help="Run directory"),
+    workers: int = typer.Option(5, help="Parallel instances"),
+):
+    """Re-run instances that ended in Timeout/TimeoutExpired (infra timeouts)."""
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    preds = json.loads((run_dir / "preds.json").read_text())
+    all_ids = [json.loads(l)["instance_id"]
+               for l in open("/mnt/large/SWE-bench-spec/swe_bench_verified.jsonl")]
+    exclude = set(manifest.get("excluded", []))
+    todo = [i for i in all_ids if i not in preds and i not in exclude]
+    if not todo:
+        print("[sweval] nothing to retry — all instances have predictions")
+        return
+    print(f"[sweval] retrying {len(todo)} timeout/interrupted instances: {todo}")
+    api_key = (run_dir / ".env.api_key").read_text().strip()
+    provider = _resolve_provider(
+        yaml.safe_load((PROFILES_DIR / "providers.yaml").read_text()).get("providers", {}),
+        manifest["model"], manifest.get("base_url"))
+    state = run_generation(run_dir, provider, manifest["model"],
+                           manifest["gen_kwargs"], workers=workers,
+                           exclude=manifest["excluded"], instances=todo,
+                           base_url=manifest.get("base_url"), api_key=api_key)
+    if state["state"] == "PAUSED":
+        raise typer.Exit(3)
+    _spawn_or_run_eval(run_dir, manifest["model"], manifest["gen_kwargs"],
+                       manifest.get("n", 1), workers, manifest["excluded"],
+                       verbose=False, detached=True)
 
 
 if __name__ == "__main__":

@@ -8,6 +8,27 @@ import time
 from pathlib import Path
 
 
+def spawn_eval_detached(run_dir: Path, workers: int, timeout: int | None = None) -> int:
+    """Launch the eval worker as a session-detached subprocess (survives parent death).
+
+    Returns the worker PID. Progress: sweval status / harness_eval.log / EVAL_DONE.txt
+    """
+    log_path = run_dir / "harness_eval.log"
+    log_f = open(log_path, "a")
+    log_f.write(f"\n=== sweval detached evaluation started {time.strftime('%F %T')} ===\n")
+    log_f.flush()
+    targ = str(timeout) if timeout else "none"
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "sweval.evalworker", str(run_dir), str(workers), targ],
+        stdout=log_f, stderr=subprocess.STDOUT,
+        start_new_session=True,   # detach: survives parent/terminal death
+    )
+    print(f"[sweval] evaluation running in BACKGROUND (pid {proc.pid}), "
+          f"log: {log_path}")
+    print(f"[sweval] watch: sweval status {run_dir}  |  report: {run_dir}/REPORT.md")
+    return proc.pid
+
+
 def run_evaluation(run_dir: Path, workers: int = 10, timeout: int | None = None,
                    subset_ids: list[str] | None = None) -> dict:
     """Run official harness on preds.json. Returns {'report_path', 'rc'}.

@@ -39,6 +39,9 @@ known-broken exclusion list with evidence, and crash-safe resume with a circuit 
 
 - **One command** — preflight (key / balance / tool-call / cost gate) → generation →
   official grading → report
+- **Detached evaluation** — grading runs as a session-detached worker: killing the CLI,
+  closing the terminal, or losing the SSH session never loses the evaluation
+  (progress via `sweval status`, completion marked by `EVAL_DONE.txt`)
 - **Leaderboard alignment** — official agent + official harness, machine-verified zero
   config drift outside the model block; version matrix printed in every report
 - **Crash-safe** — per-instance artifacts are written atomically and incrementally;
@@ -46,6 +49,8 @@ known-broken exclusion list with evidence, and crash-safe resume with a circuit 
   exhaustion, power loss — worst case loses the in-flight instances)
 - **Circuit breaker** — consecutive fatal API errors without progress pause the run
   instead of burning money (tested: balance-exhaustion mid-run resumed losslessly)
+- **Timeout retry** — `sweval retry-timeouts` automatically finds instances lost to
+  infra timeouts (container wall-clock, exec limits) and re-runs them, then re-grades
 - **Known-broken exclusion** — 9 instances with per-instance evidence and revival
   conditions (`profiles/exclude.yaml`); reports show both raw (/500) and adjusted (/491) rates
 - **Any provider** — OpenAI-compatible, Anthropic-protocol gateways, and custom
@@ -97,6 +102,8 @@ sweval report runs/<run_id>       # (re)generate REPORT.md
 | `sweval run` | preflight → generate → evaluate → report |
 | `sweval resume <run_dir>` | idempotent resume (skips finished instances) |
 | `sweval status <run_dir>` | progress / cost / breaker state |
+| `sweval retry-timeouts <run_dir>` | re-run instances lost to infra timeouts |
+| `sweval report <run_dir>` | (re)generate REPORT.md + metrics.json |
 
 Key `run` options: `--tier high|medium|off` (reasoning mapping), `--n 3` (rollouts),
 `--max-cost 50` (cost gate), `--workers 10`, `--instances id1,id2` (smoke subset),
