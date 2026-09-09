@@ -250,5 +250,28 @@ def retry_timeouts(
                        verbose=False, detached=True)
 
 
+@app.command()
+def report(
+    run_dir: Path = typer.Argument(..., help="Run directory"),
+):
+    """(Re)generate REPORT.md + metrics.json from existing eval results."""
+    manifest = json.loads((run_dir / "manifest.json").read_text())
+    reports = sorted((run_dir / "eval_reports").glob(f"*{run_dir.name}.json")) if (run_dir / "eval_reports").exists() else []
+    if not reports:
+        print(f"[sweval] no eval report found under {run_dir / 'eval_reports'}; "
+              f"run evaluation first")
+        raise typer.Exit(4)
+    from .runner import load_exclude
+    exclude, _ = load_exclude(PROFILES_DIR)
+    metrics = build_metrics(run_dir, reports[-1], exclude,
+                            _mini_agent_version(), SWEBENCH_VERSION,
+                            manifest["model"], manifest.get("gen_kwargs", {}),
+                            manifest.get("n", 1))
+    md = write_report(run_dir, metrics, PROFILES_DIR / "anchors.yaml",
+                      PROFILES_DIR / "exclude.yaml")
+    print(f"[sweval] REPORT: {md}")
+    print(f"[sweval] metrics: {run_dir / 'metrics.json'}")
+
+
 if __name__ == "__main__":
     app()
